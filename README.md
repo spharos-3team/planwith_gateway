@@ -9,7 +9,7 @@ PLANWITH 마이크로서비스의 단일 진입점 역할을 하는 API Gateway�
 - Java 17
 - Spring Boot 4.0.7
 - Spring Cloud 2025.1.2
-- Spring Cloud Gateway Server Web MVC
+- Spring Cloud Gateway Server WebFlux
 - Spring Cloud Netflix Eureka Client
 - Gradle 9.5.1
 
@@ -95,7 +95,7 @@ $env:EUREKA_PREFER_IP_ADDRESS = "true"
 
 ## 라우트 추가 방법
 
-이 프로젝트는 Gateway Server Web MVC를 사용하므로 라우트 설정 경로는 `spring.cloud.gateway.server.webmvc.routes`입니다.
+이 프로젝트는 Gateway Server WebFlux를 사용하므로 라우트 설정 경로는 `spring.cloud.gateway.server.webflux.routes`입니다.
 
 다음은 향후 `USER-SERVICE`가 Eureka에 등록되었을 때 사용할 수 있는 예시입니다. 서비스 ID와 외부 공개 경로는 실제 서비스가 확정된 후 변경해야 합니다.
 
@@ -104,7 +104,7 @@ spring:
   cloud:
     gateway:
       server:
-        webmvc:
+        webflux:
           routes:
             - id: user-service
               uri: lb://USER-SERVICE
@@ -174,9 +174,9 @@ package com.planwith.gateway.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 
 @Configuration
 public class SecurityConfig {
@@ -189,15 +189,15 @@ public class SecurityConfig {
     };
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .securityContextRepository(
+                NoOpServerSecurityContextRepository.getInstance()
             )
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                .anyRequest().authenticated()
+            .authorizeExchange(authorize -> authorize
+                .pathMatchers(PUBLIC_ENDPOINTS).permitAll()
+                .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(Customizer.withDefaults())
@@ -212,7 +212,7 @@ public class SecurityConfig {
 ### Security 적용 시 확인사항
 
 - 공개 API, 로그인·회원가입 API, Swagger 경로를 구체적으로 구분합니다.
-- 기본 정책은 `anyRequest().authenticated()`로 유지합니다.
+- 기본 정책은 `anyExchange().authenticated()`로 유지합니다.
 - 역할 또는 Scope 기반 권한 검사가 필요하면 `hasRole`, `hasAuthority` 또는 `SCOPE_` 권한을 사용합니다.
 - CORS 허용 Origin을 `*`로 열지 않고 프론트엔드 주소로 제한합니다.
 - `Authorization` 헤더와 토큰 값은 로그에 남기지 않습니다.
@@ -226,12 +226,12 @@ public class SecurityConfig {
 
 > 아래 내용은 아직 프로젝트에 적용되지 않은 예정 사항입니다.
 
-현재 프로젝트는 Web MVC 기반이므로 Spring Boot 4 호환 `springdoc-openapi` Web MVC Starter를 사용합니다.
+현재 프로젝트는 WebFlux 기반이므로 Spring Boot 4 호환 `springdoc-openapi` WebFlux Starter를 사용합니다.
 
 ### 추가할 의존성
 
 ```groovy
-implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
+implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.3'
 ```
 
 적용 후 Gateway 자체 API 문서는 기본적으로 다음 경로에서 확인할 수 있습니다.
@@ -252,7 +252,7 @@ spring:
   cloud:
     gateway:
       server:
-        webmvc:
+        webflux:
           routes:
             - id: user-service-docs
               uri: lb://USER-SERVICE
@@ -299,7 +299,7 @@ springdoc:
 
 ## 참고 문서
 
-- [Spring Cloud Gateway Server Web MVC](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-webmvc.html)
-- [Spring Security 요청 권한 설정](https://docs.spring.io/spring-security/reference/7.0/servlet/authorization/authorize-http-requests.html)
-- [Spring Security OAuth 2.0 Resource Server JWT](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html)
+- [Spring Cloud Gateway Server WebFlux](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-webflux.html)
+- [Spring Security WebFlux](https://docs.spring.io/spring-security/reference/reactive/index.html)
+- [Spring Security Reactive OAuth 2.0 Resource Server JWT](https://docs.spring.io/spring-security/reference/reactive/oauth2/resource-server/jwt.html)
 - [springdoc-openapi Spring Boot 4 문서](https://springdoc.org/v4/index.html)
