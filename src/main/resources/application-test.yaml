@@ -1,0 +1,24 @@
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes: []
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+
+app:
+  gateway:
+    internal-token: test-gateway-internal-token
+  jwt:
+    issuer: http://localhost:8080
+    audience: planwith-api
+  cors:
+    allowed-origins: http://localhost:3000
