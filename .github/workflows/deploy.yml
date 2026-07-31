@@ -1,0 +1,42 @@
+name: Deploy Gateway
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    types: [closed]
+    branches: [develop]
+
+jobs:
+  deploy:
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    runs-on: [self-hosted, planwith-server]
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      IMAGE_NAME: planwith/gateway
+      IMAGE_TAG: latest
+      COMPOSE_FILE: C:/planwith/docker-compose.yml
+      SERVICE_NAME: gateway
+
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" .
+
+      - name: Stop and recreate service container
+        run: |
+          docker compose -f "${COMPOSE_FILE}" stop "${SERVICE_NAME}" || true
+          docker compose -f "${COMPOSE_FILE}" rm -f "${SERVICE_NAME}" || true
+          docker compose -f "${COMPOSE_FILE}" up -d "${SERVICE_NAME}"
+
+      - name: Show running containers
+        run: docker compose -f "${COMPOSE_FILE}" ps
+
+      - name: Prune unused images
+        run: docker image prune -f
