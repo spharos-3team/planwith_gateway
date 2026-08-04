@@ -38,7 +38,9 @@ public class SecurityConfig {
 			"/api/v1/auth/password/reset",
 			"/api/v1/auth/profile-image",
 			"/api/v1/terms",
-			"/api/v1/terms/**"
+			"/api/v1/terms/**",
+			// local/test BE helper (inactive in prod profiles on fo-user-be)
+			"/api/v1/dev/**"
 	};
 
 	@Bean

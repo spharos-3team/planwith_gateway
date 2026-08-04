@@ -10,22 +10,13 @@ spring:
               uri: lb://fo-user-be
               predicates:
                 - Path=/api/v1/**
-              filters:
-                - RemoveRequestHeader=X-Auth-User-Id
-                - RemoveRequestHeader=X-Auth-Roles
-                - RemoveRequestHeader=X-Auth-Scopes
-                - RemoveRequestHeader=X-Auth-Session-Id
-                - RemoveRequestHeader=X-Gateway-Internal-Token
+              # Client X-Auth-* / X-Gateway-Internal-Token are stripped and re-injected
+              # by GatewayContextHeaderFilter (servlet wrapper). Do not RemoveRequestHeader
+              # those names here — Gateway MVC would drop the trusted values too.
             - id: fo-user-be-jwks
               uri: lb://fo-user-be
               predicates:
                 - Path=/oauth2/jwks
-              filters:
-                - RemoveRequestHeader=X-Auth-User-Id
-                - RemoveRequestHeader=X-Auth-Roles
-                - RemoveRequestHeader=X-Auth-Scopes
-                - RemoveRequestHeader=X-Auth-Session-Id
-                - RemoveRequestHeader=X-Gateway-Internal-Token
   security:
     oauth2:
       resourceserver:
