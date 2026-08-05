@@ -39,6 +39,10 @@ public class SecurityConfig {
 			"/api/v1/auth/profile-image",
 			"/api/v1/terms",
 			"/api/v1/terms/**",
+			"/api/v1/grades",
+			"/api/v1/grades/**",
+			// service-to-service grade sync (BE still requires gateway trust header)
+			"/api/v1/internal/**",
 			// local/test BE helper (inactive in prod profiles on fo-user-be)
 			"/api/v1/dev/**"
 	};
