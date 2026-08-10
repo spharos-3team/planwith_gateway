@@ -6,16 +6,17 @@ spring:
       server:
         webflux:
           routes:
-            - id: user-service
-              uri: lb://user-service
+            # --- planwith-fo-schedule (compose에 등록된 실제 서비스) ---
+            - id: planwith-fo-schedule
+              uri: lb://planwith-fo-schedule
               predicates:
-                - Path=/api/users/**
-            - id: user-service-docs
-              uri: lb://user-service
+                - Path=/api/planwith-fo-schedule/**
+            - id: planwith-fo-schedule-docs
+              uri: lb://planwith-fo-schedule
               predicates:
-                - Path=/docs/user-service
+                - Path=/docs/planwith-fo-schedule,/docs/planwith-fo-schedule/**
               filters:
-                - RewritePath=/docs/user-service, /v3/api-docs
+                - RewritePath=/docs/planwith-fo-schedule(?<segment>/?.*), /v3/api-docs${segment}
 
 server:
   address: ${SERVER_ADDRESS:0.0.0.0}
@@ -24,7 +25,8 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_DEFAULT_ZONE:http://192.168.10.46:8761/eureka/}
+      # 실제 서버 IP는 코드에 두지 않음. 로컬 기본값 / Docker·운영은 환경변수로 주입
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:true}
 
@@ -33,6 +35,8 @@ springdoc:
     enabled: true
   swagger-ui:
     path: /swagger-ui.html
+    # Gateway Swagger UI에서 서비스별 OpenAPI 선택
     urls:
-      - name: user-service
-        url: /docs/user-service
+      - name: planwith-fo-schedule
+        url: /docs/planwith-fo-schedule
+    urls-primary-name: planwith-fo-schedule
