@@ -222,69 +222,20 @@ public class SecurityConfig {
 
 ---
 
-## 추후 Swagger/OpenAPI 적용 계획
+## Swagger / OpenAPI 통합
 
-> 아래 내용은 아직 프로젝트에 적용되지 않은 예정 사항입니다.
-
-현재 프로젝트는 WebFlux 기반이므로 Spring Boot 4 호환 `springdoc-openapi` WebFlux Starter를 사용합니다.
-
-### 추가할 의존성
-
-```groovy
-implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.3'
-```
-
-적용 후 Gateway 자체 API 문서는 기본적으로 다음 경로에서 확인할 수 있습니다.
+Gateway는 `springdoc-openapi` WebFlux UI로 **등록된 마이크로서비스 문서만** 한곳에서 제공합니다.
 
 ```text
 Swagger UI: http://localhost:8000/swagger-ui.html
-OpenAPI JSON: http://localhost:8000/v3/api-docs
 ```
 
-Gateway에 Controller가 없다면 Gateway 자체 OpenAPI 문서는 비어 있을 수 있습니다. 마이크로서비스 전체 API를 표시하려면 각 하위 서비스가 `/v3/api-docs`를 제공해야 하며, Gateway에서 각 문서 경로를 라우팅한 뒤 Swagger UI에 등록해야 합니다.
+- 서비스 API: `lb://<spring.application.name>` (Eureka). IP 직접 지정 금지.
+- 문서 프록시: `/docs/<service>/**` → 서비스 `/v3/api-docs/**`
+- 목록: `springdoc.swagger-ui.urls` (compose에 있는 서비스만 등록)
+- 각 서비스 OpenAPI `servers`는 `GATEWAY_PUBLIC_URL`(기본 `/`)로 Gateway를 가리켜 LAN IP 노출을 막습니다.
 
-### 하위 서비스 OpenAPI 문서 라우트 예시
-
-다음 예시는 Gateway의 `/docs/user-service` 요청을 `USER-SERVICE`의 `/v3/api-docs`로 전달합니다.
-
-```yaml
-spring:
-  cloud:
-    gateway:
-      server:
-        webflux:
-          routes:
-            - id: user-service-docs
-              uri: lb://USER-SERVICE
-              predicates:
-                - Path=/docs/user-service
-              filters:
-                - RewritePath=/docs/user-service, /v3/api-docs
-```
-
-### Swagger UI 문서 목록 예시
-
-```yaml
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    urls:
-      - name: user-service
-        url: /docs/user-service
-  api-docs:
-    enabled: true
-```
-
-서비스가 추가되면 문서 라우트와 `springdoc.swagger-ui.urls` 항목을 함께 추가합니다.
-
-### Swagger 적용 시 확인사항
-
-- 각 서비스가 동일한 외부 경로 규칙과 OpenAPI 3 규격을 사용하도록 정리합니다.
-- Swagger UI의 `Try it out` 요청이 Gateway 공개 경로를 사용하도록 각 서비스의 OpenAPI `servers` 값을 확인합니다.
-- JWT 인증 API에는 OpenAPI Bearer Security Scheme을 선언합니다.
-- 개발 환경에서는 Swagger 경로를 공개할 수 있지만 운영 환경에서는 비활성화하거나 관리자 권한으로 제한합니다.
-- API 문서 라우트 역시 일반 서비스 라우트와 동일하게 타임아웃과 장애 상황을 고려합니다.
-- 서비스 ID, 문서 경로 및 보안 공개 범위가 확정되기 전에는 예시 설정을 그대로 운영에 사용하지 않습니다.
+서비스 추가 시 `planwith-infra/templates/gateway.route.snippet.yml`을 routes + `swagger-ui.urls`에 반영하세요.
 
 ## 권장 적용 순서
 

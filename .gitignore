@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Local env (never commit host IPs / secrets) ###
+.env
+.env.local
+.env.*.local
