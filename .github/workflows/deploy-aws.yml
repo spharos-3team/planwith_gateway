@@ -73,18 +73,16 @@ jobs:
           set -euo pipefail
           : "${INSTANCE_ID:?AWS_EC2_INSTANCE_ID must be set}"
 
+          # AWS-RunShellScript uses /bin/sh; force bash for deploy-aws.sh (pipefail etc.)
+          REMOTE_CMD="cd /opt/planwith && sed -i 's/\r$//' scripts/deploy-aws.sh || true && chmod +x scripts/deploy-aws.sh && bash ./scripts/deploy-aws.sh ${SERVICE_NAME}"
+          jq -n --arg cmd "${REMOTE_CMD}" '{commands:["bash -lc \($cmd)"]}' > /tmp/ssm-params.json
+
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${INSTANCE_ID}" \
             --document-name "AWS-RunShellScript" \
             --comment "planwith deploy ${SERVICE_NAME}" \
             --timeout-seconds 600 \
-            --parameters commands="[
-              \"set -euo pipefail\",
-              \"cd /opt/planwith\",
-              \"sed -i 's/\\r$//' scripts/deploy-aws.sh || true\",
-              \"chmod +x scripts/deploy-aws.sh\",
-              \"./scripts/deploy-aws.sh ${SERVICE_NAME}\"
-            ]" \
+            --parameters file:///tmp/ssm-params.json \
             --query "Command.CommandId" \
             --output text)
 
