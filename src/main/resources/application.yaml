@@ -56,4 +56,6 @@ springdoc:
     urls:
       - name: planwith-fo-schedule
         url: /docs/planwith-fo-schedule
+      - name: planwith-fo-member
+        url: /docs/planwith-fo-member
     urls-primary-name: planwith-fo-schedule
