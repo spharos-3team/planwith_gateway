@@ -2,9 +2,7 @@
 # Keeps existing Windows deploy.yml (planwith-server) untouched.
 #
 # Required repo Variables:
-#   AWS_REGION, AWS_ACCOUNT_ID, ECR_REGISTRY, AWS_ROLE_ARN, AWS_EC2_HOST
-# Required repo Secret:
-#   PLANWITH_AWS_SSH_KEY  (contents of planwith-aws-key.pem)
+#   AWS_REGION, AWS_ACCOUNT_ID, ECR_REGISTRY, AWS_ROLE_ARN, AWS_EC2_INSTANCE_ID
 #
 # Placeholders:
 #   gateway  compose service name (e.g. planwith-fo-member, discovery)
@@ -62,15 +60,63 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy on EC2 over SSH
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ vars.AWS_EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.PLANWITH_AWS_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            cd /opt/planwith
-            sed -i 's/\r$//' scripts/deploy-aws.sh || true
-            chmod +x scripts/deploy-aws.sh
-            ./scripts/deploy-aws.sh ${{ env.SERVICE_NAME }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy on EC2 via SSM
+        env:
+          INSTANCE_ID: ${{ vars.AWS_EC2_INSTANCE_ID }}
+        run: |
+          set -euo pipefail
+          : "${INSTANCE_ID:?AWS_EC2_INSTANCE_ID must be set}"
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${INSTANCE_ID}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "planwith deploy ${SERVICE_NAME}" \
+            --timeout-seconds 600 \
+            --parameters commands="[
+              \"set -euo pipefail\",
+              \"cd /opt/planwith\",
+              \"sed -i 's/\\r$//' scripts/deploy-aws.sh || true\",
+              \"chmod +x scripts/deploy-aws.sh\",
+              \"./scripts/deploy-aws.sh ${SERVICE_NAME}\"
+            ]" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM CommandId=${COMMAND_ID}"
+
+          for _ in $(seq 1 90); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "${COMMAND_ID}" \
+              --instance-id "${INSTANCE_ID}" \
+              --query "Status" \
+              --output text 2>/dev/null || echo "Pending")
+            echo "SSM Status=${STATUS}"
+            case "${STATUS}" in
+              Success)
+                aws ssm get-command-invocation \
+                  --command-id "${COMMAND_ID}" \
+                  --instance-id "${INSTANCE_ID}" \
+                  --query "{Status:Status,Stdout:StandardOutputContent,Stderr:StandardErrorContent}" \
+                  --output json
+                exit 0
+                ;;
+              Failed|Cancelled|TimedOut)
+                aws ssm get-command-invocation \
+                  --command-id "${COMMAND_ID}" \
+                  --instance-id "${INSTANCE_ID}" \
+                  --query "{Status:Status,Stdout:StandardOutputContent,Stderr:StandardErrorContent}" \
+                  --output json
+                exit 1
+                ;;
+            esac
+            sleep 5
+          done
+
+          echo "SSM command wait timed out"
+          exit 1
