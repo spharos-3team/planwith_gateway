@@ -1,0 +1,76 @@
+# AWS deploy ??copy into each service repo as .github/workflows/deploy-aws.yml
+# Keeps existing Windows deploy.yml (planwith-server) untouched.
+#
+# Required repo Variables:
+#   AWS_REGION, AWS_ACCOUNT_ID, ECR_REGISTRY, AWS_ROLE_ARN, AWS_EC2_HOST
+# Required repo Secret:
+#   PLANWITH_AWS_SSH_KEY  (contents of planwith-aws-key.pem)
+#
+# Placeholders:
+#   gateway  compose service name (e.g. planwith-fo-member, discovery)
+#   planwith-gateway      ECR repository name (e.g. planwith-fo-member)
+#   main        trigger branch (develop or main)
+
+name: Deploy AWS gateway
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+  ECR_REPOSITORY: planwith-gateway
+  IMAGE_TAG: latest
+  SERVICE_NAME: gateway
+  DEPLOY_DIR: /opt/planwith
+
+jobs:
+  build-and-push:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        run: |
+          IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+  deploy:
+    needs: build-and-push
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy on EC2 over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ vars.AWS_EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.PLANWITH_AWS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/planwith
+            sed -i 's/\r$//' scripts/deploy-aws.sh || true
+            chmod +x scripts/deploy-aws.sh
+            ./scripts/deploy-aws.sh ${{ env.SERVICE_NAME }}
