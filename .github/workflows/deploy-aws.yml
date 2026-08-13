@@ -11,13 +11,16 @@
 
 name: Deploy AWS gateway
 
+# Trigger only on push (PR merge already creates a push). Do NOT also listen to
+# pull_request closed ??that double-fires and races docker compose recreate on EC2.
 on:
   push:
     branches: [main]
-  pull_request:
-    types: [closed]
-    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: aws-deploy-gateway
+  cancel-in-progress: false
 
 permissions:
   id-token: write
@@ -34,7 +37,6 @@ env:
 
 jobs:
   build-and-push:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -57,7 +59,6 @@ jobs:
 
   deploy:
     needs: build-and-push
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials (OIDC)
