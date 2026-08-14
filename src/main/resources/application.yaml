@@ -5,12 +5,42 @@ spring:
     gateway:
       server:
         webflux:
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowed-origins:
+                  - ${CORS_ALLOWED_ORIGIN_LOCAL:http://192.168.10.167:8000}
+                  - ${CORS_ALLOWED_ORIGIN_AWS:http://54.116.113.176:8000}
+                  - ${CORS_ALLOWED_ORIGIN_LOCALHOST:http://localhost:8000}
+                  - ${CORS_ALLOWED_ORIGIN_LOOPBACK:http://127.0.0.1:8000}
+                allowed-methods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowed-headers: "*"
+                exposed-headers:
+                  - Location
+                  - Content-Disposition
+                allow-credentials: true
+                max-age: 3600
           routes:
             # --- planwith-fo-schedule (compose에 등록된 실제 서비스) ---
             - id: planwith-fo-schedule
               uri: lb://planwith-fo-schedule
               predicates:
                 - Path=/api/planwith-fo-schedule/**
+            - id: planwith-fo-schedule-v1
+              uri: lb://planwith-fo-schedule
+              predicates:
+                - Path=/api/v1/schedules/**,/api/v1/flights/**,/api/v1/flight-locations/**
+            - id: planwith-fo-schedule-legacy
+              uri: lb://planwith-fo-schedule
+              predicates:
+                - Path=/schedules/**,/flights/**,/flight-locations/**
             - id: planwith-fo-schedule-docs
               uri: lb://planwith-fo-schedule
               predicates:
