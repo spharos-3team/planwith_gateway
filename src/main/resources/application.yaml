@@ -77,6 +77,28 @@ spring:
               filters:
                 - RewritePath=/docs/planwith-fo-grade(?<segment>/?.*), /v3/api-docs${segment}
 
+            - id: planwith-fo-token
+              uri: lb://planwith-fo-token
+              predicates:
+                - Path=/api/planwith-fo-token/**
+            - id: planwith-fo-token-docs
+              uri: lb://planwith-fo-token
+              predicates:
+                - Path=/docs/planwith-fo-token,/docs/planwith-fo-token/**
+              filters:
+                - RewritePath=/docs/planwith-fo-token(?<segment>/?.*), /v3/api-docs${segment}
+
+            - id: planwith-fo-meeting
+              uri: lb://planwith-fo-meeting
+              predicates:
+                - Path=/api/planwith-fo-meeting/**
+            - id: planwith-fo-meeting-docs
+              uri: lb://planwith-fo-meeting
+              predicates:
+                - Path=/docs/planwith-fo-meeting,/docs/planwith-fo-meeting/**
+              filters:
+                - RewritePath=/docs/planwith-fo-meeting(?<segment>/?.*), /v3/api-docs${segment}
+
 # Member Service(RS256)와 동일한 issuer/audience. JWK는 Member /oauth2/jwks 에서 조회.
 # Docker에서는 JWT_JWK_SET_URI=http://planwith-fo-member:8082/oauth2/jwks 로 주입.
 app:
@@ -110,4 +132,8 @@ springdoc:
         url: /docs/planwith-fo-member
       - name: planwith-fo-grade
         url: /docs/planwith-fo-grade
+      - name: planwith-fo-token
+        url: /docs/planwith-fo-token
+      - name: planwith-fo-meeting
+        url: /docs/planwith-fo-meeting
     urls-primary-name: planwith-fo-schedule
