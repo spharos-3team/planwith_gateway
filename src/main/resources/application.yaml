@@ -99,6 +99,18 @@ spring:
               filters:
                 - RewritePath=/docs/planwith-fo-meeting(?<segment>/?.*), /v3/api-docs${segment}
 
+            # BO 컨트롤러는 /api/admin/** (@RequestMapping). FO처럼 /api/planwith-bo-management 아님.
+            - id: planwith-bo-management
+              uri: lb://planwith-bo-management
+              predicates:
+                - Path=/api/admin/**
+            - id: planwith-bo-management-docs
+              uri: lb://planwith-bo-management
+              predicates:
+                - Path=/docs/planwith-bo-management,/docs/planwith-bo-management/**
+              filters:
+                - RewritePath=/docs/planwith-bo-management(?<segment>/?.*), /v3/api-docs${segment}
+
 # Member Service(RS256)와 동일한 issuer/audience. JWK는 Member /oauth2/jwks 에서 조회.
 # Docker에서는 JWT_JWK_SET_URI=http://planwith-fo-member:8082/oauth2/jwks 로 주입.
 app:
@@ -136,4 +148,6 @@ springdoc:
         url: /docs/planwith-fo-token
       - name: planwith-fo-meeting
         url: /docs/planwith-fo-meeting
+      - name: planwith-bo-management
+        url: /docs/planwith-bo-management
     urls-primary-name: planwith-fo-schedule
