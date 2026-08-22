@@ -99,6 +99,31 @@ spring:
               filters:
                 - RewritePath=/docs/planwith-fo-meeting(?<segment>/?.*), /v3/api-docs${segment}
 
+            - id: planwith-fo-membership
+              uri: lb://planwith-fo-membership
+              predicates:
+                - Path=/api/planwith-fo-membership/**
+            - id: planwith-fo-membership-docs
+              uri: lb://planwith-fo-membership
+              predicates:
+                - Path=/docs/planwith-fo-membership,/docs/planwith-fo-membership/**
+              filters:
+                - RewritePath=/docs/planwith-fo-membership(?<segment>/?.*), /v3/api-docs${segment}
+
+            - id: planwith-fo-chat
+              uri: lb://planwith-fo-chat
+              predicates:
+                - Path=/api/planwith-fo-chat/**
+            - id: planwith-fo-chat-docs
+              uri: lb://planwith-fo-chat
+              predicates:
+                - Path=/docs/planwith-fo-chat,/docs/planwith-fo-chat/**
+              filters:
+                - RewritePath=/docs/planwith-fo-chat(?<segment>/?.*), /v3/api-docs${segment}
+
+
+
+
             # BO 컨트롤러는 /api/admin/** (@RequestMapping). FO처럼 /api/planwith-bo-management 아님.
             - id: planwith-bo-management
               uri: lb://planwith-bo-management
@@ -150,4 +175,8 @@ springdoc:
         url: /docs/planwith-fo-meeting
       - name: planwith-bo-management
         url: /docs/planwith-bo-management
+      - name: planwith-fo-membership
+        url: /docs/planwith-fo-membership
+      - name: planwith-fo-chat
+        url: /docs/planwith-fo-chat
     urls-primary-name: planwith-fo-schedule
