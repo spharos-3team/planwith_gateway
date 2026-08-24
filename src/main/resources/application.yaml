@@ -10,10 +10,12 @@ spring:
             cors-configurations:
               '[/**]':
                 allowed-origins:
-                  - ${CORS_ALLOWED_ORIGIN_LOCAL:http://192.168.10.167:8000}
-                  - ${CORS_ALLOWED_ORIGIN_AWS:http://54.116.113.176:8000}
-                  - ${CORS_ALLOWED_ORIGIN_LOCALHOST:http://localhost:8000}
-                  - ${CORS_ALLOWED_ORIGIN_LOOPBACK:http://127.0.0.1:8000}
+                  - ${CORS_ALLOWED_ORIGIN_LOCALHOST:http://localhost:3000}
+                  - ${CORS_ALLOWED_ORIGIN_LOOPBACK:http://127.0.0.1:3000}
+                  - ${CORS_ALLOWED_ORIGIN_GW_LOCALHOST:http://localhost:8000}
+                  - ${CORS_ALLOWED_ORIGIN_GW_LOOPBACK:http://127.0.0.1:8000}
+                  - ${CORS_ALLOWED_ORIGIN_LOCAL:http://localhost:3000}
+                  - ${CORS_ALLOWED_ORIGIN_AWS:http://localhost:3000}
                 allowed-methods:
                   - GET
                   - POST
