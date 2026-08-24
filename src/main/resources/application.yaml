@@ -116,6 +116,10 @@ spring:
               uri: lb://planwith-fo-chat
               predicates:
                 - Path=/api/planwith-fo-chat/**
+            - id: planwith-fo-chat-v1
+              uri: lb://planwith-fo-chat
+              predicates:
+                - Path=/api/v1/chat-rooms,/api/v1/chat-rooms/**,/api/v1/chat/ws,/api/v1/chat/ws/**
             - id: planwith-fo-chat-docs
               uri: lb://planwith-fo-chat
               predicates:
