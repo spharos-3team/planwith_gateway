@@ -94,6 +94,10 @@ spring:
               uri: lb://planwith-fo-meeting
               predicates:
                 - Path=/api/planwith-fo-meeting/**
+            - id: planwith-fo-meeting-v1
+              uri: lb://planwith-fo-meeting
+              predicates:
+                - Path=/api/v1/meetings,/api/v1/meetings/**
             - id: planwith-fo-meeting-docs
               uri: lb://planwith-fo-meeting
               predicates:
@@ -127,7 +131,50 @@ spring:
               filters:
                 - RewritePath=/docs/planwith-fo-chat(?<segment>/?.*), /v3/api-docs${segment}
 
+            - id: planwith-fo-story
+              uri: lb://planwith-fo-story
+              predicates:
+                - Path=/api/planwith-fo-story/**
+            - id: planwith-fo-story-docs
+              uri: lb://planwith-fo-story
+              predicates:
+                - Path=/docs/planwith-fo-story,/docs/planwith-fo-story/**
+              filters:
+                - RewritePath=/docs/planwith-fo-story(?<segment>/?.*), /v3/api-docs${segment}
 
+            - id: planwith-fo-comment
+              uri: lb://planwith-fo-comment
+              predicates:
+                - Path=/api/planwith-fo-comment/**
+            - id: planwith-fo-comment-docs
+              uri: lb://planwith-fo-comment
+              predicates:
+                - Path=/docs/planwith-fo-comment,/docs/planwith-fo-comment/**
+              filters:
+                - RewritePath=/docs/planwith-fo-comment(?<segment>/?.*), /v3/api-docs${segment}
+
+
+            - id: planwith-fo-like
+              uri: lb://planwith-fo-like
+              predicates:
+                - Path=/api/planwith-fo-like/**
+            - id: planwith-fo-like-docs
+              uri: lb://planwith-fo-like
+              predicates:
+                - Path=/docs/planwith-fo-like,/docs/planwith-fo-like/**
+              filters:
+                - RewritePath=/docs/planwith-fo-like(?<segment>/?.*), /v3/api-docs${segment}
+
+            - id: planwith-fo-report
+              uri: lb://planwith-fo-report
+              predicates:
+                - Path=/api/planwith-fo-report/**
+            - id: planwith-fo-report-docs
+              uri: lb://planwith-fo-report
+              predicates:
+                - Path=/docs/planwith-fo-report,/docs/planwith-fo-report/**
+              filters:
+                - RewritePath=/docs/planwith-fo-report(?<segment>/?.*), /v3/api-docs${segment}
 
 
             # BO 컨트롤러는 /api/admin/** (@RequestMapping). FO처럼 /api/planwith-bo-management 아님.
@@ -185,4 +232,12 @@ springdoc:
         url: /docs/planwith-fo-membership
       - name: planwith-fo-chat
         url: /docs/planwith-fo-chat
+      - name: planwith-fo-story
+        url: /docs/planwith-fo-story
+      - name: planwith-fo-comment
+        url: /docs/planwith-fo-comment
+      - name: planwith-fo-like
+        url: /docs/planwith-fo-like
+      - name: planwith-fo-report
+        url: /docs/planwith-fo-report
     urls-primary-name: planwith-fo-schedule
