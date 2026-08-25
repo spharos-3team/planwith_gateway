@@ -51,17 +51,17 @@ spring:
                 - RewritePath=/docs/planwith-fo-schedule(?<segment>/?.*), /v3/api-docs${segment}
 
             - id: planwith-fo-member
-              uri: lb://planwith-fo-member
+              uri: ${app.member.upstream-uri:lb://planwith-fo-member}
               predicates:
                 - Path=/api/planwith-fo-member/**
 
             - id: planwith-fo-member-v1
-              uri: lb://planwith-fo-member
+              uri: ${app.member.upstream-uri:lb://planwith-fo-member}
               predicates:
                 - Path=/api/v1/members/**,/api/v1/auth/**,/api/v1/terms/**,/api/v1/terms
 
             - id: planwith-fo-member-docs
-              uri: lb://planwith-fo-member
+              uri: ${app.member.upstream-uri:lb://planwith-fo-member}
               predicates:
                 - Path=/docs/planwith-fo-member,/docs/planwith-fo-member/**
               filters:
