@@ -6,28 +6,46 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+import com.planwith.gateway.filter.JwtAuthenticationWebFilter;
+
 /**
- * JWT 검증은 {@link com.planwith.gateway.filter.JwtAuthenticationGlobalFilter}에서 수행한다.
- * 이번 단계에서는 모든 exchange를 permitAll로 두어 기존 public API / route 정책을 유지한다.
+ * 로그인 필수 여부는 여기서만 정한다. JWT 검증은 {@link JwtAuthenticationWebFilter},
+ * downstream 식별 헤더는 {@link com.planwith.gateway.filter.JwtAuthenticationGlobalFilter}.
  *
- * <p>Spring Security가 classpath에 있으면 Gateway {@code globalcors} 대신 Security CORS가 사용되므로
- * 동일한 origin 정책을 여기서 유지한다.
+ * <p>공개(permitAll): 로그인/회원가입/약관/토큰 갱신, CORS preflight, Swagger, BO 로그인.
+ * BO {@code /api/admin/**} 는 Member JWT가 아니라 BO 자체 JWT를 쓰므로 Gateway는 통과시키고
+ * planwith-bo-management Security가 막는다.
+ *
+ * <p>그 외 모든 API는 authenticated(). Bearer가 없거나 검증 실패면 401.
  */
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
 	@Bean
-	SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+	JwtAuthenticationWebFilter jwtAuthenticationWebFilter(ReactiveJwtDecoder jwtDecoder) {
+		return new JwtAuthenticationWebFilter(jwtDecoder);
+	}
+
+	@Bean
+	SecurityWebFilterChain securityWebFilterChain(
+			ServerHttpSecurity http,
+			JwtAuthenticationWebFilter jwtAuthenticationWebFilter
+	) {
 		return http
 				.csrf(ServerHttpSecurity.CsrfSpec::disable)
 				.cors(Customizer.withDefaults())
@@ -35,7 +53,36 @@ public class SecurityConfig {
 				.formLogin(ServerHttpSecurity.FormLoginSpec::disable)
 				.logout(ServerHttpSecurity.LogoutSpec::disable)
 				.securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
-				.authorizeExchange(exchange -> exchange.anyExchange().permitAll())
+				.addFilterAt(jwtAuthenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+				.authorizeExchange(exchange -> exchange
+						.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+						.pathMatchers(
+								"/swagger-ui.html",
+								"/swagger-ui/**",
+								"/webjars/**",
+								"/v3/api-docs/**",
+								"/docs/**",
+								"/actuator/health",
+								"/actuator/health/**",
+								"/favicon.ico"
+						).permitAll()
+						.pathMatchers(
+								"/api/v1/auth/**",
+								"/api/v1/terms",
+								"/api/v1/terms/**"
+						).permitAll()
+						.pathMatchers(HttpMethod.POST, "/api/v1/members", "/api/v1/members/").permitAll()
+						.pathMatchers(HttpMethod.GET, "/api/v1/members/nicknames/availability").permitAll()
+						.pathMatchers("/api/admin/**").permitAll()
+						.anyExchange().authenticated()
+				)
+				.exceptionHandling(handling -> handling
+						.authenticationEntryPoint((exchange, ex) -> {
+							exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+							exchange.getResponse().getHeaders().set(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
+							return exchange.getResponse().setComplete();
+						})
+				)
 				.build();
 	}
 

@@ -46,3 +46,7 @@ dependencyManagement {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.named('bootRun') {
+	jvmArgs '-Dspring.profiles.active=local'
+}
