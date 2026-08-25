@@ -88,13 +88,24 @@ public class SecurityConfig {
 
 	@Bean
 	CorsConfigurationSource corsConfigurationSource(
-			@Value("${CORS_ALLOWED_ORIGIN_LOCAL:http://192.168.10.167:8000}") String originLocal,
-			@Value("${CORS_ALLOWED_ORIGIN_AWS:http://54.116.113.176:8000}") String originAws,
-			@Value("${CORS_ALLOWED_ORIGIN_LOCALHOST:http://localhost:8000}") String originLocalhost,
-			@Value("${CORS_ALLOWED_ORIGIN_LOOPBACK:http://127.0.0.1:8000}") String originLoopback
+			@Value("${CORS_ALLOWED_ORIGIN_LOCALHOST:http://localhost:3000}") String originLocalhost,
+			@Value("${CORS_ALLOWED_ORIGIN_LOOPBACK:http://127.0.0.1:3000}") String originLoopback,
+			@Value("${CORS_ALLOWED_ORIGIN_GW_LOCALHOST:http://localhost:8000}") String originGwLocalhost,
+			@Value("${CORS_ALLOWED_ORIGIN_GW_LOOPBACK:http://127.0.0.1:8000}") String originGwLoopback,
+			@Value("${CORS_ALLOWED_ORIGIN_LOCAL:http://localhost:3000}") String originLocal,
+			@Value("${CORS_ALLOWED_ORIGIN_AWS:http://localhost:3000}") String originAws,
+			@Value("${CORS_ALLOWED_ORIGIN_BO_VERCEL:https://planwith-bo-fe.vercel.app}") String originBoVercel
 	) {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(List.of(originLocal, originAws, originLocalhost, originLoopback));
+		config.setAllowedOrigins(List.of(
+				originLocalhost,
+				originLoopback,
+				originGwLocalhost,
+				originGwLoopback,
+				originLocal,
+				originAws,
+				originBoVercel
+		));
 		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.addAllowedHeader("*");
 		config.setExposedHeaders(List.of("Location", "Content-Disposition"));

@@ -16,6 +16,7 @@ spring:
                   - ${CORS_ALLOWED_ORIGIN_GW_LOOPBACK:http://127.0.0.1:8000}
                   - ${CORS_ALLOWED_ORIGIN_LOCAL:http://localhost:3000}
                   - ${CORS_ALLOWED_ORIGIN_AWS:http://localhost:3000}
+                  - ${CORS_ALLOWED_ORIGIN_BO_VERCEL:https://planwith-bo-fe.vercel.app}
                 allowed-methods:
                   - GET
                   - POST
