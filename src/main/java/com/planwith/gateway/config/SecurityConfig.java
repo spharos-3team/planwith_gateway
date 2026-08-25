@@ -41,13 +41,24 @@ public class SecurityConfig {
 
 	@Bean
 	CorsConfigurationSource corsConfigurationSource(
-			@Value("${CORS_ALLOWED_ORIGIN_LOCAL:http://192.168.10.167:8000}") String originLocal,
-			@Value("${CORS_ALLOWED_ORIGIN_AWS:http://54.116.113.176:8000}") String originAws,
+			@Value("${CORS_ALLOWED_ORIGIN_LOCAL:http://localhost:3000}") String originLocal,
+			@Value("${CORS_ALLOWED_ORIGIN_AWS:http://localhost:3000}") String originAws,
 			@Value("${CORS_ALLOWED_ORIGIN_LOCALHOST:http://localhost:8000}") String originLocalhost,
-			@Value("${CORS_ALLOWED_ORIGIN_LOOPBACK:http://127.0.0.1:8000}") String originLoopback
-	) {
+			@Value("${CORS_ALLOWED_ORIGIN_LOOPBACK:http://127.0.0.1:8000}") String originLoopback,
+			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOCALHOST:http://localhost:5173}") String viteLocalhost,
+			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOCALHOST_5174:http://localhost:5174}") String viteLocalhost5174,
+			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOOPBACK:http://127.0.0.1:5173}") String viteLoopback,
+			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOOPBACK_5174:http://127.0.0.1:5174}") String viteLoopback5174) {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(List.of(originLocal, originAws, originLocalhost, originLoopback));
+		config.setAllowedOrigins(List.of(
+				originLocal,
+				originAws,
+				originLocalhost,
+				originLoopback,
+				viteLocalhost,
+				viteLocalhost5174,
+				viteLoopback,
+				viteLoopback5174));
 		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.addAllowedHeader("*");
 		config.setExposedHeaders(List.of("Location", "Content-Disposition"));
