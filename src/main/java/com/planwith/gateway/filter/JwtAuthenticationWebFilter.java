@@ -33,6 +33,12 @@ public class JwtAuthenticationWebFilter implements WebFilter {
 
 	public static final String EXCHANGE_JWT_ATTR = JwtAuthenticationWebFilter.class.getName() + ".JWT";
 
+	/**
+	 * Next.js가 rewrite/proxy 과정에서 {@code Authorization}을 빼는 경우가 있어
+	 * FE가 같은 토큰을 이 헤더로도 보낸다.
+	 */
+	public static final String ACCESS_TOKEN_HEADER = "X-Planwith-Access-Token";
+
 	private static final String BEARER_PREFIX = "Bearer ";
 
 	private final ReactiveJwtDecoder jwtDecoder;
@@ -43,12 +49,7 @@ public class JwtAuthenticationWebFilter implements WebFilter {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-		String authorization = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-		if (!StringUtils.hasText(authorization) || !authorization.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
-			return chain.filter(exchange);
-		}
-
-		String token = authorization.substring(BEARER_PREFIX.length()).trim();
+		String token = extractAccessToken(exchange);
 		if (!StringUtils.hasText(token)) {
 			return chain.filter(exchange);
 		}
@@ -90,5 +91,34 @@ public class JwtAuthenticationWebFilter implements WebFilter {
 			return List.of(new SimpleGrantedAuthority(role));
 		}
 		return List.of();
+	}
+
+	private static String extractAccessToken(ServerWebExchange exchange) {
+		String authorization = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+		String bearer = bearerToken(authorization);
+		if (StringUtils.hasText(bearer)) {
+			return bearer;
+		}
+		return rawOrBearerToken(exchange.getRequest().getHeaders().getFirst(ACCESS_TOKEN_HEADER));
+	}
+
+	private static String bearerToken(String header) {
+		if (!StringUtils.hasText(header) || !header.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+			return null;
+		}
+		String token = header.substring(BEARER_PREFIX.length()).trim();
+		return StringUtils.hasText(token) ? token : null;
+	}
+
+	private static String rawOrBearerToken(String header) {
+		if (!StringUtils.hasText(header)) {
+			return null;
+		}
+		String bearer = bearerToken(header);
+		if (StringUtils.hasText(bearer)) {
+			return bearer;
+		}
+		String token = header.trim();
+		return StringUtils.hasText(token) ? token : null;
 	}
 }

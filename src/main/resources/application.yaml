@@ -5,6 +5,8 @@ spring:
     gateway:
       server:
         webflux:
+          httpclient:
+            connect-timeout: 2000
           globalcors:
             add-to-simple-url-handler-mapping: true
             cors-configurations:
@@ -58,7 +60,7 @@ spring:
             - id: planwith-fo-member-v1
               uri: ${app.member.upstream-uri:lb://planwith-fo-member}
               predicates:
-                - Path=/api/v1/members/**,/api/v1/auth/**,/api/v1/terms/**,/api/v1/terms
+                - Path=/api/v1/members,/api/v1/members/**,/api/v1/auth/**,/api/v1/terms/**,/api/v1/terms
 
             - id: planwith-fo-member-docs
               uri: ${app.member.upstream-uri:lb://planwith-fo-member}
@@ -91,15 +93,15 @@ spring:
                 - RewritePath=/docs/planwith-fo-token(?<segment>/?.*), /v3/api-docs${segment}
 
             - id: planwith-fo-meeting
-              uri: lb://planwith-fo-meeting
+              uri: ${MEETING_SERVICE_URI:lb://planwith-fo-meeting}
               predicates:
                 - Path=/api/planwith-fo-meeting/**
             - id: planwith-fo-meeting-v1
-              uri: lb://planwith-fo-meeting
+              uri: ${MEETING_SERVICE_URI:lb://planwith-fo-meeting}
               predicates:
                 - Path=/api/v1/meetings,/api/v1/meetings/**
             - id: planwith-fo-meeting-docs
-              uri: lb://planwith-fo-meeting
+              uri: ${MEETING_SERVICE_URI:lb://planwith-fo-meeting}
               predicates:
                 - Path=/docs/planwith-fo-meeting,/docs/planwith-fo-meeting/**
               filters:
@@ -195,7 +197,7 @@ app:
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8082}
     audience: ${JWT_AUDIENCE:planwith-api}
-    jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8082/oauth2/jwks}
+    jwk-set-uri: ${JWT_JWK_SET_URI:http://127.0.0.1:8082/oauth2/jwks}
 
 server:
   address: ${SERVER_ADDRESS:0.0.0.0}
@@ -203,6 +205,8 @@ server:
 
 eureka:
   client:
+    # Docker/운영 기본 on. 로컬 단독(Eureka 없이 Member 직접 URI)은 EUREKA_CLIENT_ENABLED=false
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
     service-url:
       # 실제 서버 IP는 코드에 두지 않음. 로컬 기본값 / Docker·운영은 환경변수로 주입
       defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}

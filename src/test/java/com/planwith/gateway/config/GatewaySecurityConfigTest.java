@@ -100,6 +100,26 @@ class GatewaySecurityConfigTest {
 	}
 
 	@Test
+	void publicMeetingListWithoutToken_isNot401() {
+		webTestClient.get()
+				.uri("/api/v1/meetings")
+				.exchange()
+				.expectStatus().value(status -> {
+					if (status == HttpStatus.UNAUTHORIZED.value()) {
+						throw new AssertionError("meeting list must stay public");
+					}
+				});
+	}
+
+	@Test
+	void myMeetingsWithoutToken_returns401() {
+		webTestClient.get()
+				.uri("/api/v1/meetings/me")
+				.exchange()
+				.expectStatus().isUnauthorized();
+	}
+
+	@Test
 	void swaggerWithoutToken_isNot401() {
 		webTestClient.get()
 				.uri("/swagger-ui.html")

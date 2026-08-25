@@ -96,6 +96,29 @@ class JwtAuthenticationWebFilterTest {
 	}
 
 	@Test
+	void storesJwtFromCustomAccessTokenHeader_whenAuthorizationMissing() {
+		Jwt jwt = jwtBuilder().subject("member-a").claim("roles", List.of("ROLE_USER")).build();
+		when(jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
+
+		MockServerWebExchange exchange = MockServerWebExchange.from(
+				MockServerHttpRequest.get("/api/v1/members/me")
+						.header(JwtAuthenticationWebFilter.ACCESS_TOKEN_HEADER, "valid.token")
+						.build()
+		);
+
+		AtomicReference<Object> authentication = new AtomicReference<>();
+		WebFilterChain chain = e -> ReactiveSecurityContextHolder.getContext()
+				.doOnNext(ctx -> authentication.set(ctx.getAuthentication()))
+				.then();
+
+		StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+
+		assertThat((Jwt) exchange.getAttribute(JwtAuthenticationWebFilter.EXCHANGE_JWT_ATTR)).isEqualTo(jwt);
+		assertThat(authentication.get()).isInstanceOf(JwtAuthenticationToken.class);
+		verify(jwtDecoder).decode("valid.token");
+	}
+
+	@Test
 	void doesNotTreatDownstreamErrorsAsJwtFailure() {
 		Jwt jwt = jwtBuilder().subject("member-a").build();
 		when(jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));

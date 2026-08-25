@@ -1,14 +1,19 @@
 package com.planwith.gateway.config;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -19,6 +24,9 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.server.ServerWebExchange;
+
+import reactor.core.publisher.Mono;
 
 import com.planwith.gateway.filter.JwtAuthenticationWebFilter;
 
@@ -73,28 +81,50 @@ public class SecurityConfig {
 						).permitAll()
 						.pathMatchers(HttpMethod.POST, "/api/v1/members", "/api/v1/members/").permitAll()
 						.pathMatchers(HttpMethod.GET, "/api/v1/members/nicknames/availability").permitAll()
+						.pathMatchers(HttpMethod.GET, "/api/v1/meetings/me", "/api/v1/meetings/me/**").authenticated()
+						.pathMatchers(HttpMethod.GET, "/api/v1/meetings", "/api/v1/meetings/*").permitAll()
 						.pathMatchers("/api/admin/**").permitAll()
 						.anyExchange().authenticated()
 				)
 				.exceptionHandling(handling -> handling
-						.authenticationEntryPoint((exchange, ex) -> {
-							exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-							exchange.getResponse().getHeaders().set(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
-							return exchange.getResponse().setComplete();
-						})
+						.authenticationEntryPoint((exchange, ex) -> writeUnauthorized(exchange))
 				)
 				.build();
 	}
 
+	private static Mono<Void> writeUnauthorized(ServerWebExchange exchange) {
+		ServerHttpResponse response = exchange.getResponse();
+		response.setStatusCode(HttpStatus.UNAUTHORIZED);
+		response.getHeaders().set(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
+		response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+		byte[] body = (
+				"{\"success\":false,\"data\":null,\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"인증이 필요합니다.\"},\"timestamp\":\""
+						+ Instant.now()
+						+ "\"}"
+		).getBytes(StandardCharsets.UTF_8);
+		response.getHeaders().setContentLength(body.length);
+		DataBuffer buffer = response.bufferFactory().wrap(body);
+		return response.writeWith(Mono.just(buffer));
+	}
+
 	@Bean
 	CorsConfigurationSource corsConfigurationSource(
-			@Value("${CORS_ALLOWED_ORIGIN_LOCAL:http://192.168.10.167:8000}") String originLocal,
-			@Value("${CORS_ALLOWED_ORIGIN_AWS:http://54.116.113.176:8000}") String originAws,
-			@Value("${CORS_ALLOWED_ORIGIN_LOCALHOST:http://localhost:8000}") String originLocalhost,
-			@Value("${CORS_ALLOWED_ORIGIN_LOOPBACK:http://127.0.0.1:8000}") String originLoopback
+			@Value("${CORS_ALLOWED_ORIGIN_LOCALHOST:http://localhost:3000}") String originLocalhost,
+			@Value("${CORS_ALLOWED_ORIGIN_LOOPBACK:http://127.0.0.1:3000}") String originLoopback,
+			@Value("${CORS_ALLOWED_ORIGIN_GW_LOCALHOST:http://localhost:8000}") String originGwLocalhost,
+			@Value("${CORS_ALLOWED_ORIGIN_GW_LOOPBACK:http://127.0.0.1:8000}") String originGwLoopback,
+			@Value("${CORS_ALLOWED_ORIGIN_LOCAL:http://localhost:3000}") String originLocal,
+			@Value("${CORS_ALLOWED_ORIGIN_AWS:http://localhost:3000}") String originAws
 	) {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(List.of(originLocal, originAws, originLocalhost, originLoopback));
+		config.setAllowedOrigins(List.of(
+				originLocalhost,
+				originLoopback,
+				originGwLocalhost,
+				originGwLoopback,
+				originLocal,
+				originAws
+		));
 		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.addAllowedHeader("*");
 		config.setExposedHeaders(List.of("Location", "Content-Disposition"));
