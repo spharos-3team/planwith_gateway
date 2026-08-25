@@ -94,6 +94,10 @@ public class SecurityConfig {
 			@Value("${CORS_ALLOWED_ORIGIN_GW_LOOPBACK:http://127.0.0.1:8000}") String originGwLoopback,
 			@Value("${CORS_ALLOWED_ORIGIN_LOCAL:http://localhost:3000}") String originLocal,
 			@Value("${CORS_ALLOWED_ORIGIN_AWS:http://localhost:3000}") String originAws,
+			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOCALHOST:http://localhost:5173}") String viteLocalhost,
+			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOCALHOST_5174:http://localhost:5174}") String viteLocalhost5174,
+			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOOPBACK:http://127.0.0.1:5173}") String viteLoopback,
+			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOOPBACK_5174:http://127.0.0.1:5174}") String viteLoopback5174,
 			@Value("${CORS_ALLOWED_ORIGIN_BO_VERCEL:https://planwith-bo-fe.vercel.app}") String originBoVercel
 	) {
 		CorsConfiguration config = new CorsConfiguration();
@@ -104,6 +108,10 @@ public class SecurityConfig {
 				originGwLoopback,
 				originLocal,
 				originAws,
+				viteLocalhost,
+				viteLocalhost5174,
+				viteLoopback,
+				viteLoopback5174,
 				originBoVercel
 		));
 		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
