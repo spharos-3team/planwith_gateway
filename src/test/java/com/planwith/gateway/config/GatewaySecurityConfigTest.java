@@ -61,6 +61,21 @@ class GatewaySecurityConfigTest {
 	}
 
 	@Test
+	void publicLoginFromFrontendOrigin_isNot403() {
+		webTestClient.post()
+				.uri("/api/v1/auth/login")
+				.header(HttpHeaders.ORIGIN, "http://localhost:3000")
+				.header(HttpHeaders.CONTENT_TYPE, "application/json")
+				.bodyValue("{}")
+				.exchange()
+				.expectStatus().value(status -> {
+					if (status == HttpStatus.FORBIDDEN.value()) {
+						throw new AssertionError("FE origin must be allowed by Gateway CORS");
+					}
+				});
+	}
+
+	@Test
 	void publicLoginWithoutToken_isNot401() {
 		webTestClient.post()
 				.uri("/api/v1/auth/login")

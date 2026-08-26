@@ -5,6 +5,9 @@ spring:
     gateway:
       server:
         webflux:
+          # 하위 서비스가 CORS 헤더를 달아도 Gateway 헤더와 중복되지 않게 한다.
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
           globalcors:
             add-to-simple-url-handler-mapping: true
             cors-configurations:
@@ -16,9 +19,14 @@ spring:
                   - ${CORS_ALLOWED_ORIGIN_GW_LOOPBACK:http://127.0.0.1:8000}
                   - ${CORS_ALLOWED_ORIGIN_LOCAL:http://localhost:3000}
                   - ${CORS_ALLOWED_ORIGIN_AWS:http://localhost:3000}
-                  - http://localhost:5174
+                  - ${CORS_ALLOWED_ORIGIN_VITE_LOCALHOST:http://localhost:5173}
+                  - ${CORS_ALLOWED_ORIGIN_VITE_LOCALHOST_5174:http://localhost:5174}
+                  - ${CORS_ALLOWED_ORIGIN_VITE_LOOPBACK:http://127.0.0.1:5173}
+                  - ${CORS_ALLOWED_ORIGIN_VITE_LOOPBACK_5174:http://127.0.0.1:5174}
                   - ${CORS_ALLOWED_ORIGIN_BO_VERCEL:https://planwith-bo-fe.vercel.app}
                   - ${CORS_ALLOWED_ORIGIN_BO_ADMIN:https://admin.planwith.store}
+                  - ${CORS_ALLOWED_ORIGIN_FO_VERCEL:https://planwith-fo-fe.vercel.app}
+                  - ${CORS_ALLOWED_ORIGIN_AWS:https://planwith.store}
                 allowed-methods:
                   - GET
                   - POST
