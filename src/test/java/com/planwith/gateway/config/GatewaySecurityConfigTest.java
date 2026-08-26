@@ -139,6 +139,30 @@ class GatewaySecurityConfigTest {
 	}
 
 	@Test
+	void publicMemberProfileWithoutToken_isNot401() {
+		webTestClient.get()
+				.uri("/api/v1/members/70b8263f-e0e0-49bb-8cd8-ac2234f22566/profile")
+				.exchange()
+				.expectStatus().value(status -> {
+					if (status == HttpStatus.UNAUTHORIZED.value()) {
+						throw new AssertionError("member public profile must stay public");
+					}
+				});
+	}
+
+	@Test
+	void publicMemberProfileImageWithoutToken_isNot401() {
+		webTestClient.get()
+				.uri("/api/v1/members/70b8263f-e0e0-49bb-8cd8-ac2234f22566/profile-image")
+				.exchange()
+				.expectStatus().value(status -> {
+					if (status == HttpStatus.UNAUTHORIZED.value()) {
+						throw new AssertionError("member profile image must stay public");
+					}
+				});
+	}
+
+	@Test
 	void myMeetingsWithoutToken_returns401() {
 		webTestClient.get()
 				.uri("/api/v1/meetings/me")
