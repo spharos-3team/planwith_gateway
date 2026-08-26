@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
 		"eureka.client.enabled=false",
-		"app.jwt.jwk-set-uri=http://127.0.0.1:65534/oauth2/jwks"
+		"app.jwt.secret=test-member-gateway-jwt-secret-at-least-32-bytes"
 })
 class GatewaySecurityConfigTest {
 
@@ -115,6 +115,62 @@ class GatewaySecurityConfigTest {
 	}
 
 	@Test
+	void publicMeetingListWithoutToken_isNot401() {
+		webTestClient.get()
+				.uri("/api/v1/meetings")
+				.exchange()
+				.expectStatus().value(status -> {
+					if (status == HttpStatus.UNAUTHORIZED.value()) {
+						throw new AssertionError("meeting list must stay public");
+					}
+				});
+	}
+
+	@Test
+	void publicMeetingCoverWithoutToken_isNot401() {
+		webTestClient.get()
+				.uri("/api/v1/meetings/70b8263f-e0e0-49bb-8cd8-ac2234f22566/cover-image")
+				.exchange()
+				.expectStatus().value(status -> {
+					if (status == HttpStatus.UNAUTHORIZED.value()) {
+						throw new AssertionError("meeting cover must stay public");
+					}
+				});
+	}
+
+	@Test
+	void publicMemberProfileWithoutToken_isNot401() {
+		webTestClient.get()
+				.uri("/api/v1/members/70b8263f-e0e0-49bb-8cd8-ac2234f22566/profile")
+				.exchange()
+				.expectStatus().value(status -> {
+					if (status == HttpStatus.UNAUTHORIZED.value()) {
+						throw new AssertionError("member public profile must stay public");
+					}
+				});
+	}
+
+	@Test
+	void publicMemberProfileImageWithoutToken_isNot401() {
+		webTestClient.get()
+				.uri("/api/v1/members/70b8263f-e0e0-49bb-8cd8-ac2234f22566/profile-image")
+				.exchange()
+				.expectStatus().value(status -> {
+					if (status == HttpStatus.UNAUTHORIZED.value()) {
+						throw new AssertionError("member profile image must stay public");
+					}
+				});
+	}
+
+	@Test
+	void myMeetingsWithoutToken_returns401() {
+		webTestClient.get()
+				.uri("/api/v1/meetings/me")
+				.exchange()
+				.expectStatus().isUnauthorized();
+	}
+
+	@Test
 	void swaggerWithoutToken_isNot401() {
 		webTestClient.get()
 				.uri("/swagger-ui.html")
@@ -129,7 +185,7 @@ class GatewaySecurityConfigTest {
 	@Test
 	void protectedApiWithValidJwt_isNot401() {
 		Jwt jwt = Jwt.withTokenValue("token")
-				.header("alg", "RS256")
+				.header("alg", "HS256")
 				.subject("member-a")
 				.claim("roles", List.of("ROLE_USER"))
 				.issuedAt(Instant.now())

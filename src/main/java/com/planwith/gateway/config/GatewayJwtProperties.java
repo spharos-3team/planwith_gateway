@@ -16,9 +16,9 @@ public class GatewayJwtProperties {
 	private String audience = "planwith-api";
 
 	/**
-	 * Member JWKS endpoint (e.g. {@code http://localhost:8082/oauth2/jwks}).
+	 * Must be the same 32-byte-or-longer secret used by Member Service.
 	 */
-	private String jwkSetUri = "http://localhost:8082/oauth2/jwks";
+	private String secret;
 
 	public String getIssuer() {
 		return issuer;
@@ -36,11 +36,11 @@ public class GatewayJwtProperties {
 		this.audience = audience;
 	}
 
-	public String getJwkSetUri() {
-		return jwkSetUri;
+	public String getSecret() {
+		return secret;
 	}
 
-	public void setJwkSetUri(String jwkSetUri) {
-		this.jwkSetUri = jwkSetUri;
+	public void setSecret(String secret) {
+		this.secret = secret;
 	}
 }

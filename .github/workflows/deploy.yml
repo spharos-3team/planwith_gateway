@@ -27,7 +27,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t "%IMAGE_NAME%:%IMAGE_TAG%" .
+        run: |
+          docker build -t "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" .
+          if errorlevel 1 docker build -t "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" .
+          if errorlevel 1 docker build -t "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" .
 
       - name: Stop and recreate service container
         run: |

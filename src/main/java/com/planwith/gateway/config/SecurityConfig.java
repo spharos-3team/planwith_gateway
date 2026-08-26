@@ -73,6 +73,15 @@ public class SecurityConfig {
 						).permitAll()
 						.pathMatchers(HttpMethod.POST, "/api/v1/members", "/api/v1/members/").permitAll()
 						.pathMatchers(HttpMethod.GET, "/api/v1/members/nicknames/availability").permitAll()
+						.pathMatchers(HttpMethod.GET, "/api/v1/members/me", "/api/v1/members/me/**").authenticated()
+						.pathMatchers(
+								HttpMethod.GET,
+								"/api/v1/members/*/profile",
+								"/api/v1/members/*/profile-image"
+						).permitAll()
+						.pathMatchers(HttpMethod.GET, "/api/v1/meetings/me", "/api/v1/meetings/me/**").authenticated()
+						.pathMatchers(HttpMethod.GET, "/api/v1/meetings", "/api/v1/meetings/*").permitAll()
+						.pathMatchers(HttpMethod.GET, "/api/v1/meetings/*/cover-image").permitAll()
 						.pathMatchers("/api/admin/**").permitAll()
 						.anyExchange().authenticated()
 				)
