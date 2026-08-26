@@ -116,7 +116,7 @@ class JwtAuthenticationWebFilterTest {
 	private static Jwt.Builder jwtBuilder() {
 		Instant now = Instant.now();
 		return Jwt.withTokenValue("token")
-				.header("alg", "RS256")
+				.header("alg", "HS256")
 				.issuedAt(now)
 				.expiresAt(now.plusSeconds(60));
 	}

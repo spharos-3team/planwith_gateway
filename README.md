@@ -135,30 +135,18 @@ testImplementation 'org.springframework.security:spring-security-test'
 
 ### JWT 설정 예시
 
-인증 서버가 OpenID Connect 또는 Authorization Server Metadata를 제공하는 경우:
+Member가 발급하는 HS256 Access Token과 동일한 issuer, audience, 공유 시크릿을 설정합니다.
 
 ```yaml
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${JWT_ISSUER_URI}
+app:
+  jwt:
+    issuer: ${JWT_ISSUER}
+    audience: ${JWT_AUDIENCE}
+    secret: ${JWT_SECRET}
 ```
 
-인증 서버의 JWK 주소를 직접 사용해야 하는 경우에는 발급자와 JWK 주소를 함께 설정합니다.
-
-```yaml
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${JWT_ISSUER_URI}
-          jwk-set-uri: ${JWT_JWK_SET_URI}
-```
-
-비밀키를 Gateway 소스 코드나 `application.yaml`에 직접 저장하지 않습니다. 운영 환경에서는 환경변수 또는 Secret Manager를 사용합니다.
+`JWT_SECRET`은 UTF-8 기준 32바이트 이상의 랜덤 값이어야 하며 Member와 Gateway에만 동일하게 주입합니다.
+비밀키를 Gateway 소스 코드나 `application.yaml`에 직접 저장하지 않습니다. 운영 환경에서는 환경변수 또는 Secret Manager를 사용하며 BO Management의 별도 시크릿과 재사용하지 않습니다.
 
 ### Security 설정 예시
 
