@@ -139,6 +139,18 @@ class GatewaySecurityConfigTest {
 	}
 
 	@Test
+	void chatWebSocketHandshakeWithoutToken_isNot401() {
+		webTestClient.get()
+				.uri("/api/v1/chat/ws")
+				.exchange()
+				.expectStatus().value(status -> {
+					if (status == HttpStatus.UNAUTHORIZED.value()) {
+						throw new AssertionError("chat STOMP handshake must stay public");
+					}
+				});
+	}
+
+	@Test
 	void publicMemberProfileWithoutToken_isNot401() {
 		webTestClient.get()
 				.uri("/api/v1/members/70b8263f-e0e0-49bb-8cd8-ac2234f22566/profile")
