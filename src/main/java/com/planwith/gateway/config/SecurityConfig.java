@@ -99,7 +99,9 @@ public class SecurityConfig {
 			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOOPBACK:http://127.0.0.1:5173}") String viteLoopback,
 			@Value("${CORS_ALLOWED_ORIGIN_VITE_LOOPBACK_5174:http://127.0.0.1:5174}") String viteLoopback5174,
 			@Value("${CORS_ALLOWED_ORIGIN_BO_VERCEL:https://planwith-bo-fe.vercel.app}") String originBoVercel,
-			@Value("${CORS_ALLOWED_ORIGIN_BO_ADMIN:https://admin.planwith.store}") String originBoAdmin
+			@Value("${CORS_ALLOWED_ORIGIN_BO_ADMIN:https://admin.planwith.store}") String originBoAdmin,
+			@Value("${CORS_ALLOWED_ORIGIN_AWS:https://planwith.store}") String originAws,
+			@Value("${CORS_ALLOWED_ORIGIN_FO_VERCEL:https://planwith-fo-fe.vercel.app}") String originFoVercel
 	) {
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowedOrigins(List.of(
@@ -114,7 +116,9 @@ public class SecurityConfig {
 				viteLoopback,
 				viteLoopback5174,
 				originBoVercel,
-				originBoAdmin
+				originBoAdmin,
+				originAws,
+				originFoVercel
 		));
 		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.addAllowedHeader("*");
