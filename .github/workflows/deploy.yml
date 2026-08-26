@@ -27,20 +27,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        shell: powershell
         run: |
-          $image = "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
-          $ok = $false
-          foreach ($n in 1..3) {
-            Write-Host "docker build attempt $n"
-            docker build -t $image .
-            if ($LASTEXITCODE -eq 0) {
-              $ok = $true
-              break
-            }
-            Start-Sleep -Seconds 20
-          }
-          if (-not $ok) { exit 1 }
+          docker build -t "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" .
+          if errorlevel 1 docker build -t "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" .
+          if errorlevel 1 docker build -t "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" .
 
       - name: Stop and recreate service container
         run: |
