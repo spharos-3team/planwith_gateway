@@ -26,7 +26,9 @@ import com.planwith.gateway.filter.JwtAuthenticationWebFilter;
  * 로그인 필수 여부는 여기서만 정한다. JWT 검증은 {@link JwtAuthenticationWebFilter},
  * downstream 식별 헤더는 {@link com.planwith.gateway.filter.JwtAuthenticationGlobalFilter}.
  *
- * <p>공개(permitAll): 로그인/회원가입/약관/토큰 갱신, CORS preflight, Swagger, BO 로그인.
+ * <p>공개(permitAll): 로그인/회원가입/약관/토큰 갱신, CORS preflight, Swagger, BO 로그인,
+ * 채팅 STOMP 핸드셰이크({@code /api/v1/chat/ws}). 브라우저는 WebSocket Upgrade에
+ * Authorization을 넣지 못하므로 핸드셰이크는 열고, 신원은 CONNECT 프레임에서 Chat이 확인한다.
  * BO {@code /api/admin/**} 는 Member JWT가 아니라 BO 자체 JWT를 쓰므로 Gateway는 통과시키고
  * planwith-bo-management Security가 막는다.
  *
@@ -82,6 +84,7 @@ public class SecurityConfig {
 						.pathMatchers(HttpMethod.GET, "/api/v1/meetings/me", "/api/v1/meetings/me/**").authenticated()
 						.pathMatchers(HttpMethod.GET, "/api/v1/meetings", "/api/v1/meetings/*").permitAll()
 						.pathMatchers(HttpMethod.GET, "/api/v1/meetings/*/cover-image").permitAll()
+						.pathMatchers("/api/v1/chat/ws", "/api/v1/chat/ws/**").permitAll()
 						.pathMatchers("/api/admin/**").permitAll()
 						.anyExchange().authenticated()
 				)
